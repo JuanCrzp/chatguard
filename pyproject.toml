@@ -11,7 +11,7 @@ fastapi = "^0.115.0"
 uvicorn = {version = "^0.30.0", extras = ["standard"]}
 requests = "^2.32.0"
 pydantic = "^2.6.0"
-python-telegram-bot = "^20.0"
+python-telegram-bot = "^22.5"
 SQLAlchemy = "^2.0.0"
 PyMySQL = "^1.1.0"
 python-dotenv = "^1.0.0"
