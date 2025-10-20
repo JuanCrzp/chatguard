@@ -1,0 +1,12 @@
+ChatGuard — Copyright (c) 2025 Juan Camilo Cruz P (GitHub: @JuanCrzp)
+
+Este software se distribuye bajo la Apache License, Version 2.0. Consulte LICENSE.txt.
+
+Este producto incluye software desarrollado por los siguientes proyectos de terceros (licencias respectivas):
+- python-telegram-bot — LGPLv3
+- discord.py — MIT
+- FastAPI — MIT
+- PyYAML — MIT
+- requests — Apache 2.0
+
+Para dudas sobre derechos, contribuciones o uso comercial, consulte la licencia y el repositorio oficial.

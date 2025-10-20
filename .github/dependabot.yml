@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    # El repositorio tiene los ficheros de Python (pyproject.toml / requirements.txt)
+    # en la raíz; Dependabot debe apuntar a "/" para encontrarlos.
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

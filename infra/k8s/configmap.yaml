@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comunidad-bot-config
+  labels:
+    app: comunidad-bot
+data:
+  BOT_ENV: "production"
+  LOG_LEVEL: "info"
+  SEND_AUTOMATIC_RESPONSES: "true"
+  DB_HOST: "mysql"
+  DB_PORT: "3306"
+  DB_NAME: "bots_platform_saas"
+  REDIS_URL: "redis://redis:6379/0"

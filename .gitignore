@@ -1,0 +1,31 @@
+# Ignorar archivos y carpetas innecesarias para el proyecto Python/JS
+__pycache__/
+*.pyc
+.env
+/.env.*
+*.sqlite3
+*.log
+.vscode/
+node_modules/
+frontend-mockup/data/*.json
+# Ignorar archivos temporales y de sistema
+.DS_Store
+Thumbs.db
+# Ignorar dependencias y builds
+/dist/
+/build/
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+
+# Pytest / Herramientas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Coverage
+.coverage
+coverage.xml
+htmlcov/

@@ -1,0 +1,226 @@
+
+# =============================
+# CONFIGURACIÓN DEL BOT (YAML)
+# =============================
+#
+# Este archivo controla TODO el comportamiento del bot en Telegram y Discord.
+# Aquí puedes cambiar reglas, mensajes, sanciones, saludos, encuestas y más.
+#
+# ¿Cómo funciona?
+# - La sección "default" aplica a todos los grupos y servidores si no hay una configuración específica.
+# - Puedes crear overrides para un grupo de Telegram (usando su chat_id negativo) o para un servidor de Discord (usando su guild_id entre comillas).
+# - Si algo no está definido en el override, se toma del default.
+#
+# Ejemplo de estructura:
+#   default:         # Reglas generales
+#   -123456789:      # Grupo de Telegram (chat_id)
+#   "987654321":    # Servidor de Discord (guild_id)
+#
+# ¿Qué puedes configurar?
+# - Reglas y mensajes de bienvenida
+# - Sanciones automáticas (advertencia, mute, kick, ban)
+# - Palabras prohibidas y patrones
+# - Permitir o no enlaces, archivos, flood, mayúsculas
+# - Recordatorios, branding SaaS, encuestas
+# - Notificaciones a admins
+#
+# ¡Lee los comentarios en cada sección para entender cada opción!
+
+
+default:
+
+  enabled: true  # ¿El bot está activo? Si pones false, el bot ignora todos los mensajes.
+  title: Reglas del Grupo  # Título que se muestra cuando alguien pide las reglas.
+  items:  # Lista de reglas que verán los usuarios.
+    - Respeta a todos los miembros.
+    - No spam ni promociones sin permiso.
+    - Usa los canales adecuados para cada tema.
+    - Evita lenguaje ofensivo.
+
+
+  # =====================
+  # CONFIGURACIÓN DE MODERACIÓN
+  # =====================
+  moderation:
+    thresholds:
+      warn: 2       # ¿Cuántas infracciones para advertir? (ej: 2 = a la segunda, advierte)
+      mute: 3       # ¿Cuántas infracciones para silenciar temporalmente?
+      kick: 4       # ¿Cuántas infracciones para expulsar del grupo/servidor?
+      ban: 6        # ¿Cuántas infracciones para banear permanentemente?
+    mute_duration_seconds: 900          # ¿Cuánto dura el mute? (en segundos, 900=15min)
+    ban_duration_seconds: 0             # ¿Ban temporal? (0 = permanente)
+    kick_rejoin_seconds: 60             # Si >0, kick temporal (puede volver tras X seg). <=0 = ban permanente
+    banned_words: ["spam", "oferta", "prohibido"]  # Palabras prohibidas (si aparecen, cuenta como infracción)
+    regex_patterns: ["\\bpalabrota\\b", "\\bcasino\\b"]  # Patrones avanzados (regex) para detectar infracciones
+    flood_limit: 0                      # Límite de mensajes por minuto por usuario (0 = sin límite)
+    whitelist_users: []                 # Lista de usuarios exentos de moderación (usernames o IDs)
+    allow_links: true                   # ¿Permitir enlaces? (true/false)
+    allow_files: true                   # ¿Permitir archivos adjuntos? (true/false)
+    delete_message_on_violation: true   # ¿Borrar el mensaje que viola reglas? (true/false)
+    enforce_only: true                  # true = solo actúa ante violaciones, false = puede responder saludos, etc.
+    greetings_enabled: true             # ¿Enviar mensajes de bienvenida?
+    admin_notify: false                 # ¿Avisar a los admins cuando se sanciona a alguien?
+    log_actions: true                   # ¿Registrar todas las acciones de moderación?
+    mute_types: ["all"]                # Tipos de mute: "text" (solo texto), "media" (solo multimedia), "all" (todo)
+    # Mensajes personalizados (puedes usar {user}, {minutes}, {hours}, {seconds})
+    warn_message: "¡Advertencia {user}! Tu mensaje viola las reglas."
+    mute_message: "{user} fue muteado por {minutes} min."
+    kick_message: "{user} fue expulsado por incumplir normas."
+    ban_message: "{user} fue baneado permanentemente."
+    # Aviso que recibe el usuario muteado si intenta escribir (sin nueva infracción)
+    muted_notice_enabled: true   # Si está en true, cuando un usuario muteado intente escribir, el bot le enviará un aviso personalizado (sin sumar otra infracción). Si está en false, no se le avisa nada mientras dure el mute.
+    muted_notice: "Estás muteado por incumplir las reglas. Espera a que termine el tiempo."
+    muted_notice_message: "Estás muteado por incumplir las reglas. Espera a que termine el tiempo." # Alias, puedes usar cualquiera
+    # Si está activo, mientras el usuario esté muteado, cualquier mensaje se trata como soft-mute:
+    # se borra (si soft_mute_enforce_delete=true) y se muestra el aviso, ignorando otras reglas.
+    muted_override_actions: true
+    # Soft-mute: borrar mensaje si el timeout/permiso del canal falla
+    soft_mute_enforce_delete: true
+    soft_mute_notice: "Mensaje eliminado: el usuario está en mute temporal."
+
+
+  # =====================
+  # OTRAS OPCIONES ÚTILES
+  # =====================
+  max_message_length: 0                   # Máximo de caracteres por mensaje (0 = sin límite)
+  link_whitelist: []                      # Lista de dominios permitidos si allow_links=false
+  invite_links_allowed: true              # ¿Permitir enlaces de invitación (ej: t.me/joinchat)?
+  caps_lock_threshold: 0                  # % de mayúsculas para considerar 'gritos' (0 = desactivado)
+
+
+  # =====================
+  # SWITCHES DE FUNCIONALIDADES (hablar/no hablar)
+  # =====================
+  features:
+    rules_command_enabled: true   # Habilitar comando /reglas (o equivalente)
+    fallback_enabled: true        # Responder "No entendí" cuando no hay intent
+    greeting_enabled: true        # Responder saludos (intent greeting)
+    welcome_enabled: true         # Enviar bienvenidas (/start o nuevos miembros)
+    survey_enabled: true          # Crear/gestionar encuestas por intent
+    raffle_enabled: true          # Permitir sorteos por intent
+
+
+  # =====================
+  # RECORDATORIOS AUTOMÁTICOS
+  # =====================
+  reminder:
+    enabled: true
+    text: "Recordatorio semanal: lee las reglas."
+    hour: "18:58"  # Hora en formato HH:MM (24h)
+    days: [] # Días de la semana: mon, tue, wed, thu, fri, sat, sun
+
+
+  # =====================
+  # BRANDING Y SAAS
+  # =====================
+  saas:
+    tenant_id: "comunidad-demo"  # Identificador del cliente/tenant (para SaaS multi-tenant)
+    plan: "pro"   # Plan contratado: free, pro, business
+    branding:
+      footer_enabled: false
+      footer_text: "— Powered by Bots Platform SaaS"
+
+
+  # =====================
+  # MENSAJE DE BIENVENIDA
+  # =====================
+  welcome:
+    enabled: true
+    # Puedes usar {user} (nombre del que entra), {group} (nombre del grupo/servidor), {rules_title} (título de reglas)
+    message: "¡Bienvenido/a {user} al grupo {group}! Por favor revisa las reglas."
+    show_rules: false  # Si true, añade el título de reglas al mensaje de bienvenida
+
+
+  # =====================
+  # ENCUESTAS AUTOMÁTICAS
+  # =====================
+  survey:
+    enabled: true
+    max_options: 10           # Máximo de opciones por encuesta
+    allow_multiple: false     # ¿Permitir elegir varias opciones?
+    anonymous: false          # ¿Encuestas anónimas?
+    create_message: null
+    vote_message: "Voto registrado: {user} eligió '{option}'"
+
+
+# OVERRIDE: GRUPO DE TELEGRAM (chat_id = -123456789)
+-123456789:
+  enabled: true
+  title: Reglas de Mi Comunidad
+  items:
+    - No spoilers sin avisar.
+    - Comparte recursos con fuentes.
+  welcome:
+    enabled: true
+    message: "¡Bienvenido/a {user}! Lee las reglas fijadas del grupo."
+    show_rules: true
+  survey:
+    enabled: true
+    max_options: 6
+    allow_multiple: true
+  moderation:
+    thresholds:
+      warn: 2
+      mute: 3
+      kick: 4
+      ban: 6
+    mute_duration_seconds: 600
+    banned_words: ["spoiler", "spam"]
+    regex_patterns: ["\\bpalabrota\\b"]
+    allow_links: false
+    enforce_only: true
+    warn_message: "¡Advertencia {user}! No se permiten spoilers sin aviso."
+    muted_notice_enabled: true
+    muted_notice: "Estás muteado por spoilers."
+    muted_override_actions: true
+    soft_mute_enforce_delete: true
+    soft_mute_notice: "Mensaje eliminado por mute temporal."
+    # (Opcional Telegram) Enviar notificaciones admin a otro chat_id (por ej., grupo de admins)
+    admin_notify_chat_id: null
+  reminder:
+    enabled: true
+    text: "¡No olvides participar en la encuesta!"
+    hour: "18:00"
+    days: [mon, wed, fri]
+
+
+# OVERRIDE: SERVIDOR DE DISCORD (guild_id = 987654321098765432)
+"987654321098765432":
+  enabled: true
+  title: Reglas del servidor Discord
+  items:
+    - Respeto entre miembros.
+    - Nada de spam ni phishing.
+  welcome:
+    enabled: true
+    message: "¡Bienvenido/a {user}! Consulta #reglas para más info."
+    show_rules: false
+  survey:
+    enabled: true
+    max_options: 10
+    allow_multiple: false
+  moderation:
+    thresholds:
+      warn: 1
+      mute: 2
+      kick: 3
+      ban: 5
+    mute_duration_seconds: 600
+    banned_words: ["spam", "casino"]
+    regex_patterns: ["\\bpalabrota\\b"]
+    allow_links: true
+    delete_message_on_violation: true
+    enforce_only: true
+    admin_notify: true
+    log_actions: true
+    # (Opcional Discord) Canal destino de notificaciones para admins
+    admin_notify_channel_id: null
+    warn_message: "Advertencia {user}: incumplimiento de reglas."
+    mute_message: "{user} muteado por {minutes} min."
+    muted_notice_enabled: true
+    muted_notice: "Estás muteado por incumplir las reglas de Discord."
+    muted_override_actions: true
+    soft_mute_enforce_delete: true
+    soft_mute_notice: "Mensaje eliminado por mute temporal."
+
+# Puedes agregar más grupos siguiendo la misma estructura usando su chat_id como clave.

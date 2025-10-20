@@ -1,0 +1,47 @@
+# Archivo de dependencias para el bot de Comunidad
+[tool.poetry]
+name = "comunidad-bot"
+version = "0.1.0"
+description = "Bot profesional para grupos y comunidades"
+authors = ["Tu Nombre <tu@email.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.115.0"
+uvicorn = {version = "^0.30.0", extras = ["standard"]}
+requests = "^2.32.0"
+pydantic = "^2.6.0"
+python-telegram-bot = "^20.0"
+SQLAlchemy = "^2.0.0"
+PyMySQL = "^1.1.0"
+python-dotenv = "^1.0.0"
+PyYAML = "^6.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+# Herramientas de calidad de código
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+exclude = ["/.venv/"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = [
+	"E",  # pycodestyle errors
+	"F",  # pyflakes
+	"I",  # isort
+]
+ignore = [
+]
+exclude = [".venv", "__pycache__", "build", "dist"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+combine-as-imports = true
