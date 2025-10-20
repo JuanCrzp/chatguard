@@ -1,50 +1,46 @@
-
--- ChatGuard Moderación - Esquema MySQL (5.7+/8.0)
+-- ChatGuard Moderación - Esquema MySQL compatible (5.6+)
 --
--- RECOMENDADO si tu servidor es MySQL 5.7, 8.0 o superior.
--- Usa columnas JSON para campos flexibles (extras, metadata, contexto).
--- Si tu MySQL es 5.6 o menor, usa el archivo moderacion_schema_compatible.sql.
+-- RECOMENDADO si tu servidor es MySQL 5.6 o si tienes problemas con columnas JSON.
+-- Usa solo tipos estándar (TEXT, VARCHAR, ENUM, etc.), máxima compatibilidad.
+-- Si tu MySQL es 5.7+ u 8.0, puedes usar el archivo moderacion_schema.sql para soporte JSON.
 --
 -- Incluye claves foráneas, índices, restricciones y estructura profesional lista para producción.
--- Ejecuta este archivo en tu base de datos MySQL para crear todas las tablas necesarias.
+-- Sin columnas JSON; usa TEXT para metadata/contexto/extras.
 
 SET NAMES utf8mb4;
 SET sql_mode = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION';
 
 START TRANSACTION;
 
--- Catálogo de bots gestionados por la plataforma
 CREATE TABLE IF NOT EXISTS bots (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     platform ENUM('telegram','discord','whatsapp','webchat','other') NOT NULL,
-    external_id VARCHAR(190) NOT NULL, -- id propio de la plataforma
+    external_id VARCHAR(190) NOT NULL,
     name VARCHAR(190) NOT NULL,
     username VARCHAR(190) NULL,
-    token_hash CHAR(64) NULL, -- hash del token para no guardar el secreto plano
+    token_hash CHAR(64) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_bots_platform_external (platform, external_id),
     UNIQUE KEY uq_bots_platform_username (platform, username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Configuración global por bot (valores por defecto)
 CREATE TABLE IF NOT EXISTS configuracion_global (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
     advertencias_max_default INT DEFAULT 3,
     autoexpulsion_default BOOLEAN DEFAULT TRUE,
     moderacion_activa_default BOOLEAN DEFAULT TRUE,
-    mute_duracion_default INT DEFAULT 900, -- segundos
-    flood_max_default INT DEFAULT 10, -- mensajes por minuto
+    mute_duracion_default INT DEFAULT 900,
+    flood_max_default INT DEFAULT 10,
     language VARCHAR(10) DEFAULT 'es',
     timezone VARCHAR(64) DEFAULT 'UTC',
-    extras JSON NULL,
+    extras TEXT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_conf_global_bot FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE,
     UNIQUE KEY uq_conf_global_bot (bot_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Palabras prohibidas por grupo/bot
 CREATE TABLE IF NOT EXISTS palabras_prohibidas (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -57,7 +53,6 @@ CREATE TABLE IF NOT EXISTS palabras_prohibidas (
     KEY idx_pp_lookup (bot_id, grupo_id, activa)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Usuarios sancionados (mute, ban, expulsión)
 CREATE TABLE IF NOT EXISTS usuarios_sancionados (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -67,13 +62,12 @@ CREATE TABLE IF NOT EXISTS usuarios_sancionados (
     hasta DATETIME NULL,
     motivo TEXT,
     fecha_sancion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    sancionado_por VARCHAR(120) NULL, -- admin que aplicó la sanción
+    sancionado_por VARCHAR(120) NULL,
     CONSTRAINT fk_us_bot FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE,
     KEY idx_us_usuario (bot_id, grupo_id, usuario_id),
     KEY idx_us_estado (sancion, hasta)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Lista negra de usuarios (bloqueos permanentes/administrativos)
 CREATE TABLE IF NOT EXISTS blacklist_moderacion (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -86,7 +80,6 @@ CREATE TABLE IF NOT EXISTS blacklist_moderacion (
     UNIQUE KEY uq_blacklist (bot_id, grupo_id, usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Whitelist de usuarios exentos de moderación
 CREATE TABLE IF NOT EXISTS whitelist_moderacion (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -99,7 +92,6 @@ CREATE TABLE IF NOT EXISTS whitelist_moderacion (
     UNIQUE KEY uq_whitelist (bot_id, grupo_id, usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Configuración de moderación por grupo/bot
 CREATE TABLE IF NOT EXISTS configuracion_moderacion (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -107,8 +99,8 @@ CREATE TABLE IF NOT EXISTS configuracion_moderacion (
     advertencias_max INT DEFAULT 3,
     autoexpulsion BOOLEAN DEFAULT TRUE,
     moderacion_activa BOOLEAN DEFAULT TRUE,
-    mute_duracion INT DEFAULT 900, -- segundos
-    flood_max INT DEFAULT 10, -- mensajes por minuto
+    mute_duracion INT DEFAULT 900,
+    flood_max INT DEFAULT 10,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_confm_bot FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE,
@@ -116,7 +108,6 @@ CREATE TABLE IF NOT EXISTS configuracion_moderacion (
     KEY idx_confm_lookup (bot_id, grupo_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Advertencias (warnings) aplicadas a usuarios
 CREATE TABLE IF NOT EXISTS advertencias (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -131,23 +122,21 @@ CREATE TABLE IF NOT EXISTS advertencias (
     KEY idx_adv_fecha (fecha)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Historial de mensajes (para auditoría y antifraude/flood)
 CREATE TABLE IF NOT EXISTS historial_mensajes (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
     grupo_id VARCHAR(100) NOT NULL,
     usuario_id VARCHAR(120) NOT NULL,
-    mensaje_id VARCHAR(190) NULL, -- id del mensaje en la plataforma
+    mensaje_id VARCHAR(190) NULL,
     tipo ENUM('texto','imagen','video','audio','documento','sistema') NOT NULL DEFAULT 'texto',
     texto TEXT NULL,
-    metadata JSON NULL,
+    metadata TEXT NULL,
     fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_hm_bot FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE,
     KEY idx_hm_lookup (bot_id, grupo_id, usuario_id, fecha),
     KEY idx_hm_tipo (tipo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Roles y permisos por usuario en cada grupo/bot
 CREATE TABLE IF NOT EXISTS roles_usuarios (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
@@ -161,29 +150,27 @@ CREATE TABLE IF NOT EXISTS roles_usuarios (
     KEY idx_roles_user (bot_id, grupo_id, usuario_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Logs de aplicación (eventos y errores generales)
 CREATE TABLE IF NOT EXISTS logs_generales (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NULL,
     nivel ENUM('DEBUG','INFO','WARN','ERROR') NOT NULL DEFAULT 'INFO',
     origen VARCHAR(190) NULL,
     mensaje TEXT NULL,
-    contexto JSON NULL,
+    contexto TEXT NULL,
     fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_logs_bot FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE SET NULL,
     KEY idx_logs_fecha (fecha),
     KEY idx_logs_nivel (nivel)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Auditoría de acciones de moderación
 CREATE TABLE IF NOT EXISTS auditoria_moderacion (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     bot_id BIGINT UNSIGNED NOT NULL,
     grupo_id VARCHAR(100) NOT NULL,
     usuario_id VARCHAR(120) NOT NULL,
-    accion VARCHAR(50) NOT NULL, -- warn, mute, ban, kick, delete, etc.
+    accion VARCHAR(50) NOT NULL,
     motivo TEXT,
-    ejecutado_por VARCHAR(120), -- admin que ejecutó la acción
+    ejecutado_por VARCHAR(120),
     fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_aud_bot FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE,
     KEY idx_aud_user_fecha (bot_id, grupo_id, usuario_id, fecha),
