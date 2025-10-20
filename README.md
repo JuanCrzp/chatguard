@@ -3,7 +3,12 @@
 <h1 align="center">ChatGuard</h1>
 <p align="center"><b>Moderación y gestión profesional para comunidades en Telegram, Discord, WhatsApp y más</b></p>
 
-> Rules: YAML • Licencia: Apache 2.0 • Runtime: Python 3.10+ • Estado: Enterprise
+<p align="center">
+  <a href="docs/rules_reference.md"><img src="https://img.shields.io/badge/Rules-YAML-blue?style=flat-square" alt="Rules YAML" /></a>
+  <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square" alt="Apache 2.0" /></a>
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square" alt="Python 3.10+" />
+  <img src="https://img.shields.io/badge/Status-Enterprise-green?style=flat-square" alt="Enterprise Ready" />
+</p>
 
 ---
 
