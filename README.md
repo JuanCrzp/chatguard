@@ -1,6 +1,8 @@
 
 
-<h1 align="center">ChatGuard</h1>
+<p align="center">
+  <img src="docs/banner_chatguard.svg" alt="ChatGuard Bot - Moderación profesional para comunidades" width="600"/>
+</p>
 <p align="center"><b>Moderación y gestión profesional para comunidades en Telegram, Discord, WhatsApp y más</b></p>
 
 <p align="center">

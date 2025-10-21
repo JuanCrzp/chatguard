@@ -1,0 +1,23 @@
+<svg width="600" height="120" viewBox="0 0 600 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="600" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3a7bd5"/>
+      <stop offset="1" stop-color="#00d2ff"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0" y1="0" x2="600" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#e0e0e0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10" y="-10" width="620" height="140" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="600" height="120" rx="24" fill="url(#bg)"/>
+  <text x="50%" y="54%" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="54" font-weight="bold" fill="url(#text)" filter="url(#shadow)">ChatGuard</text>
+  <text x="50%" y="80%" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="22" fill="#f8faff" opacity="0.92">Bot de moderación profesional para comunidades</text>
+  <g>
+    <circle cx="60" cy="60" r="28" fill="#fff" fill-opacity="0.13"/>
+    <circle cx="540" cy="60" r="18" fill="#fff" fill-opacity="0.10"/>
+    <rect x="110" y="90" width="380" height="8" rx="4" fill="#fff" fill-opacity="0.08"/>
+  </g>
+</svg>
