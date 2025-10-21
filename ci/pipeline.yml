@@ -34,8 +34,8 @@ jobs:
 			- name: Run unit & integration tests
 				env:
 					PYTHONPATH: ${{ github.workspace }}/src
-					run: |
-						pytest tests -q
+				run: |
+					pytest tests -q
 
 	docker:
 		runs-on: ubuntu-latest
