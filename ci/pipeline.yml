@@ -65,8 +65,8 @@ jobs:
 					context: .
 					file: infra/docker/Dockerfile
 					push: ${{ env.PUSH_IMAGE == 'true' }}
-					# Forzar nombre de repo en minúsculas para ghcr
-					tags: ${{ env.DOCKER_REGISTRY || 'ghcr.io' }}/${{ toLower(env.IMAGE_NAME || github.repository) }}:comunidad-latest
+					# Usar lowercase para ghcr.io
+					tags: ${{ env.DOCKER_REGISTRY || 'ghcr.io' }}/${{ env.IMAGE_NAME || github.repository }}:comunidad-latest
 				env:
 					PUSH_IMAGE: ${{ vars.PUSH_IMAGE || 'false' }}
 					DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
