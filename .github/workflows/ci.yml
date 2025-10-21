@@ -81,5 +81,5 @@ jobs:
           context: .
           file: infra/docker/Dockerfile
           push: true
-          # ghcr requires repository names to be lowercase
-          tags: ghcr.io/${{ github.repository }}:communityguard-latest
+          # ghcr requires repository names to be lowercase - force manual lowercase
+          tags: ghcr.io/juancrzp/chatguard:communityguard-latest

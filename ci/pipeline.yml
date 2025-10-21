@@ -65,8 +65,8 @@ jobs:
 					context: .
 					file: infra/docker/Dockerfile
 					push: ${{ env.PUSH_IMAGE == 'true' }}
-					# Usar lowercase para ghcr.io
-					tags: ${{ env.DOCKER_REGISTRY || 'ghcr.io' }}/${{ env.IMAGE_NAME || github.repository }}:comunidad-latest
+					# ghcr requires lowercase - force manual lowercase
+					tags: ${{ env.DOCKER_REGISTRY || 'ghcr.io' }}/juancrzp/chatguard:comunidad-latest
 				env:
 					PUSH_IMAGE: ${{ vars.PUSH_IMAGE || 'false' }}
 					DOCKER_REGISTRY: ${{ vars.DOCKER_REGISTRY }}
