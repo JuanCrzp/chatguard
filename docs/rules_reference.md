@@ -66,6 +66,7 @@ default:
 - `greetings_enabled` (bool): habilita mensajes de bienvenida.
 - `admin_notify` (bool): envía aviso al chat cuando se sanciona.
 - `log_actions` (bool): habilita logs de sanciones.
+- `action_messages_enabled` (dict): controla si se muestran mensajes públicos al aplicar cada acción. Claves: `warn`, `mute`, `kick`, `ban`. Por defecto `true`.
 - `mute_types` (list[str]): "text", "media" o "all".
 - Mensajes personalizados (placeholders disponibles: `{user}`, `{minutes}`, `{hours}`, `{seconds}`):
   - `warn_message` (str)
@@ -115,6 +116,11 @@ default:
     max_options: 6
     allow_multiple: true
   moderation:
+    action_messages_enabled:
+      warn: true
+      mute: false   # Ejemplo: silencia anuncios de mute (la acción se aplica sin mensaje público)
+      kick: true
+      ban: true
     thresholds:
       warn: 2
       mute: 3
@@ -601,3 +607,79 @@ Ejemplo:
     ban_message: "Baneado temporalmente."
     log_actions: true
 ```
+
+## Machine Learning (Naive Bayes) para moderación
+
+Además del modo clásico (palabras prohibidas y regex), el bot soporta un modo ML opcional basado en Naive Bayes. Este modo analiza el texto y, si la probabilidad de toxicidad o spam supera un umbral, aplica una acción inmediata (warn/mute/kick/ban) y, opcionalmente, borra el mensaje.
+
+Claves dentro de `moderation.ml`:
+- `enabled` (bool): activa/desactiva el modo ML. Cuando está en `false`, la moderación clásica sigue funcionando normalmente.
+- `action` (str): acción a aplicar cuando el ML detecta infracción. Valores: `warn`, `mute`, `kick`, `ban`.
+- `delete_on_ml` (bool): si es `true`, borra el mensaje detectado por ML (respetando `delete_message_on_violation`).
+- `toxicity_threshold` (float 0-1): umbral de probabilidad para considerar tóxico.
+- `spam_threshold` (float 0-1): umbral de probabilidad para considerar spam.
+- `training` (dict): ejemplos de entrenamiento por clase.
+  - `toxic` (list[str])
+  - `spam` (list[str])
+  - `normal` (list[str]) — ejemplos neutrales que ayudan a calibrar el clasificador.
+ - `ml_mode` (str): "immediate" aplica acción directa según `action`; "thresholds" solo suma una infracción y respeta `thresholds` clásicos.
+
+Ejemplo mínimo:
+
+```yaml
+default:
+  moderation:
+    ml:
+      enabled: true
+      ml_mode: immediate   # o thresholds
+      action: mute
+      delete_on_ml: true
+      toxicity_threshold: 0.55
+      spam_threshold: 0.9
+      training:
+        toxic: ["idiota", "imbecil", "maldito"]
+        spam: ["gana dinero rapido", "haz clic aqui"]
+        normal: ["hola como estas", "gracias por la ayuda"]
+```
+
+Detalles de implementación (alto nivel):
+- Tokenización robusta con normalización y eliminación de acentos/diacríticos (e.g., “imbécil” ≈ “imbecil”).
+- Clasificador Naive Bayes con suavizado de Laplace y normalización softmax de probabilidades.
+- Cacheo del modelo por `(chat_id, firma_de_entrenamiento)` para rendimiento; se reconstruye si cambias la lista de ejemplos.
+- Logs estructurados JSON de evaluación (`ml_eval`) y acción (`ml_action`) con scores y umbrales.
+- Falla segura: si algo en ML lanza una excepción, el bot continúa con el modo clásico.
+
+Buenas prácticas de entrenamiento:
+- Incluye una clase `normal` con frases comunes para calibrar el contraste.
+- Usa frases multi-palabra realistas (no solo insultos aislados) para mayor señal.
+- Mantén balanceadas las clases (número de ejemplos similar entre toxic/spam/normal).
+- Revisa `toxicity_threshold`: si es muy alto, el modelo no disparará; si es muy bajo, habrá falsos positivos.
+
+FAQ y solución de problemas:
+- “El ML no detecta insultos del entrenamiento” → Revisa: existencia de clase `normal`, umbral `toxicity_threshold` razonable (≈0.5–0.6), y que editaste `training` en el YAML correcto (default u override). Valida los logs `ml_eval`.
+- “¿Apagar ML desactiva toda la moderación?” → No. Con `ml.enabled: false` el modo clásico sigue activo (banned_words, regex, etc.).
+- “¿Los acentos afectan?” → En ML no; el tokenizador elimina diacríticos. En el modo clásico, la comparación es por substring en minúsculas; si quieres cubrir variantes con/ sin acento, añade ambas en `banned_words` o en `learning.toxic_words`.
+
+## Aprendizaje de palabras (sin ML)
+
+Para ampliar la moderación clásica sin tocar código, puedes declarar listas de palabras o frases que el bot “aprenda” como infracciones. Estas listas se agregan automáticamente a `banned_words` en tiempo de ejecución.
+
+Claves dentro de `moderation.learning`:
+- `toxic_words` (list[str]): se tratan como lenguaje tóxico/prohibido.
+- `spam_words` (list[str]): frases típicas de spam.
+
+Ejemplo:
+
+```yaml
+default:
+  moderation:
+    banned_words: ["spam", "oferta"]
+    learning:
+      toxic_words: ["idiota", "maldito"]
+      spam_words: ["oferta limitada", "gana dinero rapido"]
+```
+
+Notas:
+- Comparación en minúsculas y por substring simple (sensibilidad a diacríticos). Añade variantes si lo necesitas: `"imbecil", "imbécil"`.
+- Estas listas se aplican tanto si `ml.enabled` está activo como si no, porque forman parte del modo clásico.
+- Hot-reload: los cambios en `rules.yaml` se recargan en caliente; si no ves efecto, usa `/reload` (Telegram) o reinicia el proceso.

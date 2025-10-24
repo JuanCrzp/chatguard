@@ -62,21 +62,120 @@ default:
     admin_notify: false                 # ¿Avisar a los admins cuando se sanciona a alguien?
     log_actions: true                   # ¿Registrar todas las acciones de moderación?
     mute_types: ["all"]                # Tipos de mute: "text" (solo texto), "media" (solo multimedia), "all" (todo)
+    # Mostrar/ocultar mensajes públicos cuando se aplica una acción (true por defecto)
+    action_messages_enabled:
+      warn: true   # Mostrar mensaje público al advertir a un usuario
+      mute: true  # No mostrar mensaje público al silenciar a un usuario
+      kick: true   # Mostrar mensaje público al expulsar a un usuario
+      ban: true    # Mostrar mensaje público al banear a un usuario
+      delete: false # Controla si se muestra un texto al borrar mensajes (enlaces, largo, etc.)
     # Mensajes personalizados (puedes usar {user}, {minutes}, {hours}, {seconds})
     warn_message: "¡Advertencia {user}! Tu mensaje viola las reglas."
     mute_message: "{user} fue muteado por {minutes} min."
     kick_message: "{user} fue expulsado por incumplir normas."
     ban_message: "{user} fue baneado permanentemente."
+    # Modo estricto: si está en true, NO se generan textos por defecto.
+    # Solo se envían textos si están configurados explícitamente aquí arriba.
+    strict_message_config: true
     # Aviso que recibe el usuario muteado si intenta escribir (sin nueva infracción)
-    muted_notice_enabled: true   # Si está en true, cuando un usuario muteado intente escribir, el bot le enviará un aviso personalizado (sin sumar otra infracción). Si está en false, no se le avisa nada mientras dure el mute.
-    muted_notice: "Estás muteado por incumplir las reglas. Espera a que termine el tiempo."
-    muted_notice_message: "Estás muteado por incumplir las reglas. Espera a que termine el tiempo." # Alias, puedes usar cualquiera
+    muted_notice_enabled: false   # Si está en true, cuando un usuario muteado intente escribir, el bot le enviará un aviso. En false, no se avisa.
+    muted_notice: ""  # Dejar vacío para no enviar aviso privado al usuario muteado
+    muted_notice_message: "" # Alias, mantener vacío también
     # Si está activo, mientras el usuario esté muteado, cualquier mensaje se trata como soft-mute:
     # se borra (si soft_mute_enforce_delete=true) y se muestra el aviso, ignorando otras reglas.
     muted_override_actions: true
     # Soft-mute: borrar mensaje si el timeout/permiso del canal falla
     soft_mute_enforce_delete: true
-    soft_mute_notice: "Mensaje eliminado: el usuario está en mute temporal."
+    soft_mute_notice: ""  # Dejar vacío para no mostrar mensaje público al borrar mensajes de muteados
+
+    # =====================
+    # MACHINE LEARNING (NAIVE BAYES)
+    # =====================
+    ml:
+      enabled: true           # true para activar el modo ML (Naive Bayes)
+      ml_mode: thresholds      # immediate = sanción directa; thresholds = sumar infracción y respetar thresholds
+      action: mute             # warn|mute|kick|ban cuando el ML detecta
+      delete_on_ml: true       # si true, además borra el mensaje
+      toxicity_threshold: 0.8   # umbral para considerar tóxico (subir reduce falsos positivos)
+      spam_threshold: 0.9      # umbral para considerar spam
+      # Ejemplos de entrenamiento (puedes editar y ampliar)
+      training:
+        toxic:
+          - "idiota"
+          - "imbecil"
+          - "maldito"
+          - "maldita"
+          - "vete al carajo"
+          - "vete a la mierda"
+          - "puto"
+          - "puta"
+          - "mierda"
+          - "perra"
+          - "imbécil"
+          - "estúpido"
+          - "tonto"
+          - "bobo"
+          - "pendejo"
+          - "tarado"
+          - "pelotudo"
+          - "capullo"
+          - "gilipollas"
+          - "zorra"
+          - "asqueroso"
+          - "malnacido"
+          - "inútil"
+          - "baboso"
+          - "payaso"
+          - "cabrón"
+          - "cabróna"
+          - "hijo de puta"
+          - "hija de puta"
+          - "malparido"
+          - "desgraciado"
+          - "desgraciada"
+          - "sapo"
+          - "rata"
+          - "bestia"
+          - "animal"
+          - "cerdo"
+          - "cerda"
+          - "imbecilazo"
+          - "idiotazo"
+          - "estupidez"
+          - "mierdoso"
+          - "mierdosa"
+          - "maldito seas"
+          - "maldita seas"
+          - "vete a la verga"
+          - "vete a la chingada"
+          - "vete a la porra"
+          - "vete a la mierda"
+          - "vete a la puta"
+          - "vete a la puta madre"
+          - "vete a la concha"
+          - "vete a la concha de tu madre"
+        spam:
+          - "gana dinero rapido"
+          - "oferta limitada"
+          - "haz clic aqui"
+          - "crypto airdrop"
+          - "link gratis"
+        normal:
+          - "hola como estas"
+          - "buenos dias a todos"
+          - "gracias por la ayuda"
+          - "bienvenido al grupo"
+          - "me gusta esta comunidad"
+          - "alguien puede ayudarme"
+
+    # =====================
+    # APRENDIZAJE DE PALABRAS (SIN ML)
+    # =====================
+    # Aquí puedes definir listas de palabras que quieres que el bot "aprenda" como infracciones.
+    # Se combinan automáticamente con banned_words. Todo se compara en minúsculas.
+    learning:
+      toxic_words: ["idiota"]   # Ej: ["idiota", "imbecil", "estupido"]
+      spam_words: []    # Ej: ["gana dinero", "oferta limitada"]
 
 
   # =====================

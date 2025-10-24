@@ -18,6 +18,7 @@
 
 - Guía de administración: [docs/guia_admin.md](docs/guia_admin.md)
 - Referencia de reglas: [docs/rules_reference.md](docs/rules_reference.md)
+- Moderación ML (Naive Bayes): [docs/moderacion_ml.md](docs/moderacion_ml.md)
 - Despliegue: [docs/deployment.md](docs/deployment.md)
 - Arquitectura: [docs/architecture.md](docs/architecture.md)
 - Conectores: [docs/telegram_connector.md](docs/telegram_connector.md), [docs/discord_connector.md](docs/discord_connector.md), [docs/whatsapp_setup.md](docs/whatsapp_setup.md)
@@ -45,6 +46,7 @@
 | Función                | Descripción                                                                 |
 |------------------------|-----------------------------------------------------------------------------|
 | Moderación automática  | Filtrado de palabras, regex, thresholds, mute/kick/ban, borrado de mensajes  |
+| ML opcional (Naive Bayes) | Detección de toxicidad/spam por probabilidad; activable por chat; configurable en YAML |
 | Silencio en grupos     | `enforce_only`: solo modera, no responde saludos ni fallback en grupos       |
 | Configuración flexible | Herencia y overrides por chat/guild, switches de features                    |
 | Multi-plataforma       | Telegram, Discord, WhatsApp, Webchat (conectores modulares)                  |
@@ -234,7 +236,7 @@ Utilidades internas:
   Usa `/reload` (Telegram) o reinicia el proceso para aplicar cambios; valida con `tools/inspect_rules.py`.
 
 - ¿Cómo desactivo las advertencias públicas?  
-  Sube `thresholds.warn` o establece `warn_message: null`.
+  Usa `moderation.action_messages_enabled` para suprimir por acción. Ejemplo: `mute: false` aplicará el mute sin anunciarlo. Alternativamente, puedes poner `warn_message: null` para silenciar solo ese texto.
 
 - ¿Necesita permisos especiales en Discord?  
   Sí, según comandos. Usa `!diag_perms` para verificar.

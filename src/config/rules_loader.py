@@ -1,11 +1,43 @@
 from __future__ import annotations
 import yaml
 from pathlib import Path
+from threading import Lock
+from time import monotonic
 from functools import lru_cache
 from typing import Any, Dict, Optional
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]  # .../Comunidad
 RULES_FILE = PROJECT_ROOT / "config" / "rules.yaml"
+
+# Hot-reload ligero sin dependencias: se verifica el mtime del archivo y, si cambia,
+# se limpia el caché LRU automáticamente. Se limita la frecuencia de chequeo para rendimiento.
+_RULES_LAST_MTIME_NS: Optional[int] = None
+_RULES_LAST_CHECK_TS: float = 0.0
+_RULES_CHECK_INTERVAL_SEC: float = 1.0  # evita stat() en cada llamada
+_RULES_RELOAD_LOCK: Lock = Lock()
+
+
+def _maybe_reload_rules_if_changed() -> None:
+    global _RULES_LAST_MTIME_NS, _RULES_LAST_CHECK_TS
+    now = monotonic()
+    if (now - _RULES_LAST_CHECK_TS) < _RULES_CHECK_INTERVAL_SEC:
+        return
+    _RULES_LAST_CHECK_TS = now
+    try:
+        mtime_ns = RULES_FILE.stat().st_mtime_ns
+    except FileNotFoundError:
+        mtime_ns = None
+    # Si hay cambio respecto al último visto, limpiar caché bajo lock
+    if mtime_ns != _RULES_LAST_MTIME_NS:
+        with _RULES_RELOAD_LOCK:
+            # revalidar dentro del lock
+            try:
+                current_ns = RULES_FILE.stat().st_mtime_ns
+            except FileNotFoundError:
+                current_ns = None
+            if current_ns != _RULES_LAST_MTIME_NS:
+                reload_rules_cache()
+                _RULES_LAST_MTIME_NS = current_ns
 
 
 @lru_cache(maxsize=1)
@@ -45,6 +77,8 @@ def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any
 
 
 def get_chat_rules(chat_id: Optional[int | str]) -> Optional[Dict[str, Any]]:
+    # Hot-reload: antes de leer, validar si el YAML cambió y limpiar caché si corresponde
+    _maybe_reload_rules_if_changed()
     data = _load_rules()
     key = str(chat_id) if chat_id is not None else "default"
     # Herencia: default -> override (deep merge). Si no hay override, usar default.
@@ -130,6 +164,17 @@ def get_moderation_config(chat_id: Optional[int | str]) -> Dict[str, Any]:
     "admin_notify_channel_id": mod.get("admin_notify_channel_id"),  # Discord
         # Registrar acciones (logs/auditoría)
         "log_actions": bool(mod.get("log_actions", True)),
+        # Mostrar mensajes públicos al aplicar acciones (por acción)
+        "action_messages_enabled": {
+            "warn": bool((mod.get("action_messages_enabled", {}) or {}).get("warn", True)),
+            "mute": bool((mod.get("action_messages_enabled", {}) or {}).get("mute", True)),
+            "kick": bool((mod.get("action_messages_enabled", {}) or {}).get("kick", True)),
+            "ban": bool((mod.get("action_messages_enabled", {}) or {}).get("ban", True)),
+            # Permite controlar también los textos en acciones de eliminación directa
+            "delete": bool((mod.get("action_messages_enabled", {}) or {}).get("delete", True)),
+        },
+        # Modo estricto: no generar textos por defecto. Solo se envían textos si están configurados en rules.yaml
+        "strict_message_config": bool(mod.get("strict_message_config", False)),
         # Mensajes personalizados por acción
         "warn_message": mod.get("warn_message"),
         "mute_message": mod.get("mute_message"),
@@ -155,8 +200,15 @@ def get_moderation_config(chat_id: Optional[int | str]) -> Dict[str, Any]:
         "link_whitelist": list(mod.get("link_whitelist", rules.get("link_whitelist", []))),
         # Permitir enlaces de invitación (ej: t.me/joinchat) (en moderation o a nivel de reglas)
         "invite_links_allowed": bool(mod.get("invite_links_allowed", rules.get("invite_links_allowed", True))),
-        # Porcentaje de MAYÚSCULAS para considerar 'gritos' (0=desactivado) (en moderation o a nivel de reglas)
-        "caps_lock_threshold": int(mod.get("caps_lock_threshold", rules.get("caps_lock_threshold", 0))),
+    # Porcentaje de MAYÚSCULAS para considerar 'gritos' (0=desactivado) (en moderation o a nivel de reglas)
+    "caps_lock_threshold": int(mod.get("caps_lock_threshold", rules.get("caps_lock_threshold", 0))),
+    # Configuración ML (Naive Bayes): se expone tal cual para el handler
+    "ml": (mod.get("ml", {}) or {}),
+        # Aprendizaje manual de palabras (sin ML): se combinan con banned_words en el handler
+        "learning": {
+            "toxic_words": list((mod.get("learning", {}) or {}).get("toxic_words", [])),
+            "spam_words": list((mod.get("learning", {}) or {}).get("spam_words", [])),
+        },
     }
 
 
