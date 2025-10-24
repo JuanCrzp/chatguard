@@ -8,7 +8,7 @@ authors = ["Tu Nombre <tu@email.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 fastapi = "^0.115.0"
-uvicorn = {version = "^0.30.0", extras = ["standard"]}
+uvicorn = {version = "^0.38.0", extras = ["standard"]}
 requests = "^2.32.0"
 pydantic = "^2.6.0"
 python-telegram-bot = "^20.0"
